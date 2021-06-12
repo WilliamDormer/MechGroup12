@@ -63,6 +63,7 @@ int BottomAverage = 0;
 #include "Odometry.h"
 #include "SensorRead.h"
 #include "SensorCheck.h"
+#include "FinalPositionSearch.h"
 
 
 
@@ -115,18 +116,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   //CollectSensorData();
-  unsigned long timer = millis();
-  left_motor.setSpeed(180); // adjust speed values applied to each motor using the updates from the PID controller
-  right_motor.setSpeed(180); 
-  while(millis()<timer + 500){
-    left_motor.run(FORWARD);  
-    right_motor.run(FORWARD);
-  }
-  timer = millis();
-  while(millis()<timer + 500){
-    left_motor.run(BACKWARD);  
-    right_motor.run(BACKWARD);
-  }
+turnAndGo();
 
   //toPlot();
   
