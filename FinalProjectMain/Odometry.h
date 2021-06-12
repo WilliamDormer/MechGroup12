@@ -24,9 +24,33 @@ void init(float*leftDist, float*rightDist, float width){
     Serial.print(aj.heading*180/PI); //converts to degrees
     Serial.println("");
   }
+
+  float distanceToTarget(float x, float y){
+    float deltaX = pow(x-aj.x,2.0);
+    float deltaY = pow(y-aj.y,2.0);
+    return sqrt(deltaX + deltaY);
+  }
   
   float headingTo(float x, float y) {
-    return atan2((x-aj.x)*2, y-aj.y);
+  //i think something is wrong with this
+    //float deltaX = x-aj.x;
+    //float deltaY = y-aj.y;
+
+    //x is the target x location
+    //y is the target y location
+    //aj.x is the current vehicle x location
+    //aj.y is the current vehicle y location
+    float val = -atan2((x-aj.x),(y-aj.y));
+    //Serial.println(millis());
+    //Serial.print("Current heading ");
+    //Serial.print(aj.heading);
+    //Serial.print(", Target Heading: ");
+    //Serial.println(val);
+    return val; //x goes first because we are referencing the x axis.
+    // 50, 50 should return 1/4 PI
+    //  
+    
+    //return atan2((x-aj.x)*2, y-aj.y);
   }
 
   ISR(TIMER1_COMPA_vect) {

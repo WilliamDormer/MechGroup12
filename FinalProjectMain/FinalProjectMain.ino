@@ -7,6 +7,10 @@ AF_DCMotor right_motor(3, MOTOR12_1KHZ); // right motor to M3 on motor control b
 #define ARCPERTICK 0.55//1.1 //cm
 #define WIDTH 13.0 //wheel to wheel width in cm
 
+#define DRIVESMOOTHFACTOR 6.0 //this is used to figure out how much the turning should correct based on angle.
+#define BASEMOTORSPEED 170
+#define SLOWDOWNFACTOR 1.2;
+
 //odometry and motor encoding information
 float leftDistance = 0;
 float rightDistance = 0;
@@ -115,20 +119,67 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   //CollectSensorData();
-  unsigned long timer = millis();
-  left_motor.setSpeed(180); // adjust speed values applied to each motor using the updates from the PID controller
-  right_motor.setSpeed(180); 
-  while(millis()<timer + 500){
-    left_motor.run(FORWARD);  
-    right_motor.run(FORWARD);
-  }
-  timer = millis();
-  while(millis()<timer + 500){
-    left_motor.run(BACKWARD);  
-    right_motor.run(BACKWARD);
+
+  //plot out code that will drive the car in the correct direction based on the angle of the car.
+  //first figure out if the angle to is working properly
+  left_motor.run(FORWARD);
+  right_motor.run(FORWARD);
+  //left_motor.run(RELEASE);
+  //right_motor.run(RELEASE);
+  float testx = 50;
+  float testy = 50;
+  float heading = headingTo(testx,testy);
+  //Serial.print("Target Heading ");
+  //Serial.print(heading*180/PI);
+  float distance = distanceToTarget(testx,testy);
+
+  //then change the motor pwm values to move in the correct location
+  //if the desired angle is more positive, it needs to turn left
+  //if the desired angle is more negative, it needs to turn right.
+
+  //first start by getting the absolue value of the angle difference. 
+  //also if the angle difference is greater than 180, you will want to go the other direction, but that should never be the case.
+
+  float deltaHeading = heading - aj.heading;
+
+  Serial.print("Current Heading: ");
+  Serial.print(aj.heading);
+  Serial.print(" Desired Heading: ");
+  Serial.print(heading);
+  Serial.print("Delta Heading: ");
+  Serial.println(deltaHeading*180/PI); //converts to degrees
+  deltaHeading = deltaHeading*DRIVESMOOTHFACTOR;
+  int motorTickDiff = (int)deltaHeading;
+  //Serial.print(" motorTickDiff: ");
+  //Serial.print(motorTickDiff); //converts to degrees
+  int RightMotorValue = motorTickDiff + BASEMOTORSPEED;
+  int LeftMotorValue = BASEMOTORSPEED - motorTickDiff;
+
+  //implement slowdown factor
+  //get the distance to target.
+  float reducefactor = 0;
+  if(distance <= 100){
+    reducefactor = (100.0 - distance)*SLOWDOWNFACTOR;
   }
 
-  //toPlot();
-  
+  LeftMotorValue -= (int)reducefactor;
+  RightMotorValue -= (int)reducefactor;
 
+  //correction for bad input. 
+  if(RightMotorValue > 255){
+    RightMotorValue = 255;
+  }else if(RightMotorValue < 0){
+    RightMotorValue = 0;
+  }
+  if(LeftMotorValue > 255){
+    LeftMotorValue = 255;
+  }else if(LeftMotorValue < 0){
+    LeftMotorValue = 0;
+  }
+  //Serial.print(" Left motor value: ");
+  //Serial.print(LeftMotorValue);
+  //Serial.print(" Right motor value: ");
+  //Serial.println(RightMotorValue);
+  left_motor.setSpeed(LeftMotorValue);
+  right_motor.setSpeed(RightMotorValue);
 }
