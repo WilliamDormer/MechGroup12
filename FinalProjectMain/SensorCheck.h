@@ -13,10 +13,7 @@ void sensorTest(){
   setPointBottom = 0;
   setPointUltrasonic = 0;
 
-  for(int i = 0; i<25; i++){ //this is required to warm up the sensors for some reason, presumably so the averages get more accurate.
-    CollectSensorData();
-    delay(5);
-  }
+  
   
   while(!frontleft || !frontright || !bottom || !leftencoder || !rightencoder || !ultrasonic){
     if(bottom == LOW){ //this just saves memory resources
@@ -33,26 +30,26 @@ void sensorTest(){
     }
     if(frontleft == LOW){
       ReadLeftIR();
-      if (LeftAverage == HIGH){
+      if (LeftAverage == LOW){
         Serial.println("Front Left Sensor Attached");
         frontleft = HIGH;
       }
     }
     if(frontright == LOW){
       ReadRightIR();
-      if(RightAverage == HIGH){
+      if(RightAverage == LOW){
         frontright = HIGH;
         Serial.println("Front Right Sensor Attached");
       }
     }
     if(leftencoder == LOW){
-      if(LeftEncoderCount > 0){
+      if(leftDistance > 0){
         Serial.println("Left Encoder Sensor Attached");
         leftencoder = HIGH;
       }
     }
     if(rightencoder == LOW){
-      if(RightEncoderCount > 0){
+      if(rightDistance > 0){
         Serial.println("Right Encoder Sensor Attached");
         rightencoder = HIGH;
       }
@@ -62,13 +59,19 @@ void sensorTest(){
       ReadUltrasonic();
       if(setPointUltrasonic == 0){
         setPointUltrasonic = UltrasonicAverage;
+        //Serial.println("Ultrasonic Sensor Initialized");
       } else {
-        if(setPointUltrasonic-UltrasonicAverage>10 || setPointUltrasonic-UltrasonicAverage < -10){
+        if(setPointUltrasonic-UltrasonicAverage>30 || setPointUltrasonic-UltrasonicAverage < -30){
           ultrasonic = HIGH;
           Serial.println("UltraSonic Sensor Attached");
         }
       }
     }
   } //end of while loop.  
-  Serial.println("Sensor Check Completed");
+  Serial.println("Sensor Check Completed.. Waiting 1 second for alignment.");
+  delay(1000);
+
+  //need to reset the odometry values. 
+  rightDistance = 0;
+  leftDistance = 0;
 }
