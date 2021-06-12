@@ -70,7 +70,7 @@ void init(float*leftDist, float*rightDist, float width){
   }
 
   void countLEncoder(){ // interrupt function for left encoder
-  if(millis() - leftTimer > 5){
+  if(millis() - leftTimer > 0){
       leftDistance = leftDistance + ARCPERTICK;
   }
   leftTimer = millis();
@@ -78,7 +78,7 @@ void init(float*leftDist, float*rightDist, float width){
 }
 
 void countREncoder(){ // interrupt function for right encoder
-  if(millis() - rightTimer > 5){
+  if(millis() - rightTimer > 0){
       rightDistance = rightDistance + ARCPERTICK;
   }
   rightTimer = millis();

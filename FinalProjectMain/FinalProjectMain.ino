@@ -7,7 +7,7 @@ AF_DCMotor right_motor(3, MOTOR12_1KHZ); // right motor to M3 on motor control b
 #define ARCPERTICK 0.55//1.1 //cm
 #define WIDTH 13.0 //wheel to wheel width in cm
 
-#define DRIVESMOOTHFACTOR 6.0 //this is used to figure out how much the turning should correct based on angle.
+#define DRIVESMOOTHFACTOR 300 //this is used to figure out how much the turning should correct based on angle.
 #define BASEMOTORSPEED 170
 #define SLOWDOWNFACTOR 1.2;
 
@@ -114,20 +114,22 @@ void setup() {
   //sensorTest();
 
   init(&leftDistance,&rightDistance,WIDTH);
+  left_motor.run(FORWARD);
+  right_motor.run(FORWARD);
 }
 
 void loop() {
+ 
   // put your main code here, to run repeatedly:
   //CollectSensorData();
 
   //plot out code that will drive the car in the correct direction based on the angle of the car.
   //first figure out if the angle to is working properly
-  left_motor.run(FORWARD);
-  right_motor.run(FORWARD);
+  
   //left_motor.run(RELEASE);
   //right_motor.run(RELEASE);
-  float testx = 50;
-  float testy = 50;
+  float testx = 0;
+  float testy = 300;
   float heading = headingTo(testx,testy);
   //Serial.print("Target Heading ");
   //Serial.print(heading*180/PI);
@@ -182,4 +184,13 @@ void loop() {
   //Serial.println(RightMotorValue);
   left_motor.setSpeed(LeftMotorValue);
   right_motor.setSpeed(RightMotorValue);
+
+  if(aj.y > 300){
+    left_motor.run(RELEASE);
+    right_motor.run(RELEASE);
+  }
+
+
+  //toPlot();
+  
 }
