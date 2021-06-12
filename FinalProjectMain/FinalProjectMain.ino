@@ -1,3 +1,7 @@
+#include <AFMotor.h>
+
+AF_DCMotor left_motor(1, MOTOR34_1KHZ);  // left motor to M1 on motor control board
+AF_DCMotor right_motor(3, MOTOR12_1KHZ); // right motor to M3 on motor control board
 
 #define IRTHRESHOLD 25.0
 #define ARCPERTICK 0.55//1.1 //cm
@@ -69,7 +73,12 @@ void setup() {
   attachInterrupt(1, countLEncoder, RISING); //calls on any rising level on pin 3 (interrupt #1, soldered to Pin3) 
   attachInterrupt(0, countREncoder, RISING); //calls on any rising level on pin 2 (interrupt #0, connected to header on Pin2) 
   interrupts();
+
+
+  //setup the dc motor controller
   
+  left_motor.run(RELEASE);  
+  right_motor.run(RELEASE);
 
   //pin assignments
   pinMode(trigPin, OUTPUT);
@@ -97,9 +106,8 @@ void setup() {
     delay(5);
   }
 
-  init(&leftDistance,&rightDistance,WIDTH);
-  
-  sensorTest();
+  //init(&leftDistance,&rightDistance,WIDTH);
+  //sensorTest();
 
   init(&leftDistance,&rightDistance,WIDTH);
 }
@@ -107,5 +115,20 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   //CollectSensorData();
+  unsigned long timer = millis();
+  left_motor.setSpeed(180); // adjust speed values applied to each motor using the updates from the PID controller
+  right_motor.setSpeed(180); 
+  while(millis()<timer + 500){
+    left_motor.run(FORWARD);  
+    right_motor.run(FORWARD);
+  }
+  timer = millis();
+  while(millis()<timer + 500){
+    left_motor.run(BACKWARD);  
+    right_motor.run(BACKWARD);
+  }
+
+  //toPlot();
+  
 
 }
