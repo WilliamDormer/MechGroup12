@@ -1,4 +1,7 @@
+#include <LinkedListLib.h>
 #include <AFMotor.h>
+
+
 
 AF_DCMotor left_motor(1, MOTOR34_1KHZ);  // left motor to M1 on motor control board
 AF_DCMotor right_motor(3, MOTOR12_1KHZ); // right motor to M3 on motor control board
@@ -34,6 +37,16 @@ Position aj;
   float ad=0;
   float ae=0;
 
+//stuff for obstacle detection and avoidance
+int obstaclesDetected = 0;
+//LinkedList<float[2]> ObstacleOne = LinkedList<float[2]>();
+//LinkedList<float[2]> ObstacleTwo = LinkedList<float[2]>();
+LinkedList<float> ObstacleOneX = LinkedList<float>();
+LinkedList<float> ObstacleOneY = LinkedList<float>();
+LinkedList<float> ObstacleTwoX = LinkedList<float>();
+LinkedList<float> ObstacleTwoY = LinkedList<float>();
+
+
 //Pin Allocations
 #define echoPin A4
 #define trigPin A3
@@ -51,7 +64,7 @@ bool LeftAverage = HIGH;
 
 //these variables allow for dynamic 
 volatile int setPointBottom;
-volatile int setPointBottomPerm;
+volatile int setPointBottomPerm = 40;
 volatile int setPointUltrasonic;
 
 //Persistant Sensor information for the ultrasonic
@@ -157,13 +170,10 @@ void loop() {
         //call function to reset the odometry
       }
     }
-      
       break;
     case 1: { //obstacle avoidance
-      //temporary for testing
-      Serial.println("Obstacle Detected");
-      left_motor.run(RELEASE);
-      right_motor.run(RELEASE);
+      //navigate around the obstacle,
+      //store position information in linked list based on timer.
     }
       break;
     case 2: {//search algorithm

@@ -13,8 +13,6 @@ void sensorTest(){
   setPointBottom = 0;
   setPointUltrasonic = 0;
 
-  
-  
   while(!frontleft || !frontright || !bottom || !leftencoder || !rightencoder || !ultrasonic){
     if(bottom == LOW){ //this just saves memory resources
       ReadBottomIR();
