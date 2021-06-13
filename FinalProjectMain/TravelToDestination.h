@@ -31,9 +31,9 @@ void TravelToDestination(float testx, float testy){
   //implement slowdown factor
   //get the distance to target.
   float reducefactor = 0;
-  if(distance <= 100){
-    reducefactor = (100.0 - distance)*SLOWDOWNFACTOR;
-  }
+  //if(distance <= 100){
+  //  reducefactor = (100.0 - distance)*SLOWDOWNFACTOR;
+  //}
 
   LeftMotorValue -= (int)reducefactor;
   RightMotorValue -= (int)reducefactor;

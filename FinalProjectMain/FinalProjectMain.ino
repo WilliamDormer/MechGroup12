@@ -11,7 +11,7 @@ AF_DCMotor right_motor(3, MOTOR12_1KHZ); // right motor to M3 on motor control b
 #define WIDTH 13.0 //wheel to wheel width in cm
 
 #define DRIVESMOOTHFACTOR 300 //this is used to figure out how much the turning should correct based on angle.
-#define BASEMOTORSPEED 170
+#define BASEMOTORSPEED 160;
 #define SLOWDOWNFACTOR 1.2;
 
 //odometry and motor encoding information
@@ -149,6 +149,10 @@ void loop() {
   //we can store a separate array for each of the obstacles. 
   //then it continues going towards the destination
 
+  FindTarget();
+  delay(100000);
+  
+  /*
   switch (State){
     case 0: { //if it is traveling straight to its destination.
       TravelToDestination(0,targetY); //travel towards the end.
@@ -187,6 +191,7 @@ void loop() {
     default:
       break;
   }
+  */
   
   //only check for the bottom sensor if it thinks we are within a certain range of the sensor location, otherwise do not
   //drive towards the final location, or at least within a few cm of it, then execute the search algorithm.

@@ -38,12 +38,38 @@ void FindTarget(){
        positionArray[i][1] = cos(angle)*currentRadius; //y location
     }
     
-  
     //Serial.print("X: ");
     //Serial.println(positionArray[i][0]);
     //Serial.print(", Y: ");
-    Serial.println(positionArray[i][1]);
+    //Serial.println(positionArray[i][1]);
  }
- Serial.println("Done");
-
+ 
+ Serial.println("Done Allocating space");
+    
+    bool flag = false;
+    for(int i = 4; i < arraySize; i++){
+      Serial.print("i: ");
+      Serial.print(i);
+      delay(2000);
+      float nextPoint = distanceToTarget(positionArray[i][0], positionArray[i][1]);
+      while(nextPoint > 8.0 && flag == false){
+        ReadBottomIR();
+        nextPoint = distanceToTarget(positionArray[i][0], positionArray[i][1]);
+        Serial.print(",NextPoint: ");
+        Serial.println(nextPoint);
+        TravelToDestination(positionArray[i][0], positionArray[i][1]);
+          if(setPointBottomPerm - BottomAverage > IRTHRESHOLD || setPointBottomPerm - BottomAverage < -IRTHRESHOLD){
+            flag = true;
+          }
+      }
+      if(flag == true){
+        Serial.println("Target Found");
+        break;
+      }
+    }  
+  //then generate an array of that size. 
+  
+  
+  //gradually increase the target radius and the target angle on each iteration to plot a spiral// max radius is 1m
+  //then execute until the sensor detects the final location. 
 }
