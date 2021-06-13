@@ -15,6 +15,8 @@ AF_DCMotor right_motor(3, MOTOR12_1KHZ); // right motor to M3 on motor control b
 float leftDistance = 0;
 float rightDistance = 0;
 
+float targetY = 300; //holds the target destination y value, x will always be zero.
+
 //timing information for encoders
 unsigned long leftTimer;
 unsigned long rightTimer;
@@ -70,9 +72,11 @@ int BottomAverage = 0;
 #include "TravelToDestination.h"
 #include "FinalPositionSearch.h"
 
-
-
-#define SomeTest 3
+int State = 0; //the state variable holds the mode of operation
+//State = 0; means traveling to destination.
+//State = 1; means avoid obstacle
+//State = 2; means search for target
+//State = 3; means return trip.
 
 void setup() {
   //attach interupts for motor encoders 
@@ -118,20 +122,65 @@ void setup() {
   init(&leftDistance,&rightDistance,WIDTH);
   left_motor.run(FORWARD);
   right_motor.run(FORWARD);
+
+  State = 0;
 }
 
 void loop() {
- 
-  // put your main code here, to run repeatedly:
-  //CollectSensorData();
+  //set target location
+  //check relevant sensor data
+  //if bottom ir thing is detect then stop, begin return trip
+  //if the ultrasonic or side ir detect, then commence obstacle avoidance mode
+  //go left, and hug the outside of the obstacle, taking datapoints and adding them to the linked list. 
+  //once it returns to the original location, it then determines which of those data points was the closest to the target, and goes along the saved points to that point,
+  //we can store a separate array for each of the obstacles. 
+  //then it continues going towards the destination
 
-  //plot out code that will drive the car in the correct direction based on the angle of the car.
-  //first figure out if the angle to is working properly
+  switch (State){
+    case 0: { //if it is traveling straight to its destination.
+      TravelToDestination(0,targetY); //travel towards the end.
+      //gather relevant sensor information.
+      ReadUltrasonic();
+      ReadLeftIR();
+      ReadRightIR();
+
+      if(UltrasonicAverage < 10 || RightAverage == LOW || LeftAverage == LOW){
+        State = 1;
+        break;
+      }
+      
+      float distanceFromTarget = distanceToTarget(0,targetY);
+      if(distanceFromTarget < 10.0 || aj.y > targetY - 5){
+        State = 2;
+        targetY = 0;
+        //plot route!
+        //call function to reset the odometry
+      }
+    }
+      
+      break;
+    case 1: { //obstacle avoidance
+      //temporary for testing
+      Serial.println("Obstacle Detected");
+      left_motor.run(RELEASE);
+      right_motor.run(RELEASE);
+    }
+      break;
+    case 2: {//search algorithm
+      FindTarget();
+      //then initiate return trip
+      State = 3;
+    }
+      break;
+    case 3: //return trip
+      break;
+    default:
+      break;
+  }
   
-  //TravelToDestination(0.0,300.0);
-  delay(1000);
-  FindTarget();
-  delay(10000);
-  //toPlot();
+  //only check for the bottom sensor if it thinks we are within a certain range of the sensor location, otherwise do not
+  //drive towards the final location, or at least within a few cm of it, then execute the search algorithm.
+  //if an obstacle is found along the way, implement a function that will go around the obstacle and keep track of position information
+  
   
 }

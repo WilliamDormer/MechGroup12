@@ -46,9 +46,4 @@ void FindTarget(){
  }
  Serial.println("Done");
 
-  //then generate an array of that size. 
-  
-  
-  //gradually increase the target radius and the target angle on each iteration to plot a spiral// max radius is 1m
-  //then execute until the sensor detects the final location. 
 }
