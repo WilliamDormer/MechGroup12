@@ -56,8 +56,10 @@ void TravelToDestination(float testx, float testy){
   left_motor.setSpeed(LeftMotorValue);
   right_motor.setSpeed(RightMotorValue);
 
-  if(aj.y > 300){
-    left_motor.run(RELEASE);
-    right_motor.run(RELEASE);
-  }
+  //if(aj.y > 300){
+  //  left_motor.run(RELEASE);
+  //  right_motor.run(RELEASE);
+  //}
+
+  
 }

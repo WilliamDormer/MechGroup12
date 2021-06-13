@@ -68,6 +68,7 @@ int BottomAverage = 0;
 #include "SensorRead.h"
 #include "SensorCheck.h"
 #include "TravelToDestination.h"
+#include "FinalPositionSearch.h"
 
 
 
@@ -127,8 +128,10 @@ void loop() {
   //plot out code that will drive the car in the correct direction based on the angle of the car.
   //first figure out if the angle to is working properly
   
-  TravelToDestination(0.0,300.0);
-
+  //TravelToDestination(0.0,300.0);
+  delay(1000);
+  FindTarget();
+  delay(10000);
   //toPlot();
   
 }
