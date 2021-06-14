@@ -73,6 +73,15 @@ void init(float*leftDist, float*rightDist, float width){
     aj.x-=ah*sin(aj.heading); //change in x is x + dcenter * sin(current angle)
     aj.y+=ah*cos(aj.heading); //change in y is y + dcenter * cos(current angle)
     aj.heading+=ai; //update the angle
+
+    //take care of the overflow
+    if(abs(aj.heading)>PI){
+      if(aj.heading < 0){
+        aj.heading = 2*PI + aj.heading;
+      }else if(aj.heading > 0){
+        aj.heading = -2*PI + aj.heading;
+      }
+    }
   }
 
   void countLEncoder(){ // interrupt function for left encoder

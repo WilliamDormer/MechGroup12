@@ -96,8 +96,7 @@ void FindTarget(){
     }
     ReadBottomIR();
     if(setPointBottomPerm - BottomAverage > IRTHRESHOLD || setPointBottomPerm - BottomAverage < -IRTHRESHOLD){
-      right_motor.run(RELEASE);
-      left_motor.run(RELEASE);
+      break;
     }
   }
   

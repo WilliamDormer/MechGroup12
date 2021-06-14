@@ -10,7 +10,7 @@ AF_DCMotor right_motor(3, MOTOR12_1KHZ); // right motor to M3 on motor control b
 #define ARCPERTICK 0.55//1.1 //cm
 #define WIDTH 13.0 //wheel to wheel width in cm
 
-#define DRIVESMOOTHFACTOR 600 //this is used to figure out how much the turning should correct based on angle.
+#define DRIVESMOOTHFACTOR 250 //this is used to figure out how much the turning should correct based on angle.
 #define BASEMOTORSPEED 160;
 #define SLOWDOWNFACTOR 1.2;
 
@@ -18,7 +18,7 @@ AF_DCMotor right_motor(3, MOTOR12_1KHZ); // right motor to M3 on motor control b
 float leftDistance = 0;
 float rightDistance = 0;
 
-float targetY = 300; //holds the target destination y value, x will always be zero.
+float targetY = 100; //holds the target destination y value, x will always be zero.
 
 //timing information for encoders
 unsigned long leftTimer;
@@ -131,7 +131,7 @@ void setup() {
   }
 
   //init(&leftDistance,&rightDistance,WIDTH);
-  sensorTest();
+  //sensorTest();
 
   init(&leftDistance,&rightDistance,WIDTH);
   left_motor.run(FORWARD);
@@ -149,10 +149,10 @@ void loop() {
   //once it returns to the original location, it then determines which of those data points was the closest to the target, and goes along the saved points to that point,
   //we can store a separate array for each of the obstacles. 
   //then it continues going towards the destination
-  
+  /*
   //NavigateObstacle(0);
   //FindTarget();
-  
+  bool Done = false;
   
   switch (State){
     case 0: { //if it is traveling straight to its destination.
@@ -169,10 +169,22 @@ void loop() {
       
       float distanceFromTarget = distanceToTarget(0,targetY);
       if(distanceFromTarget < 10 || aj.y > targetY - 5){//
-        State = 2;
+        right_motor.setSpeed(0);
+        left_motor.setSpeed(0);
+        toPlot();
+        delay(2000);
+        toPlot();
+        delay(2000);
+        //State = 2;
+        State = 3; //for debug
         targetY = 0;
         //plot route!
         //call function to reset the odometry
+
+        //force turn to make it less jenky
+        //left_motor.setSpeed(80);
+        //right_motor.setSpeed(190);
+        //delay(500);
       }
     }
       break;
@@ -182,17 +194,45 @@ void loop() {
     }
       break;
     case 2: {//search algorithm
+      //Serial.println("Searching for target");
       FindTarget();
       //then initiate return trip
       State = 3;
     }
       break;
-    case 3: //return trip
+    case 3: {//return trip
+      //Serial.println("Traveling to origin");
+      TravelToDestination(0,targetY);
+      
+      float distanceFromTarget = distanceToTarget(0,targetY); //there is currently an overflow problem with this, it can't deal with the -ve to +ve shift well, so return trip doesn't work.
+      Serial.print("Current heading: ");
+      Serial.println(aj.heading);
+      if(distanceFromTarget < 10){//
+        //Serial.println(distanceFromTarget);
+        //delay(2000);
+        //Serial.println("Searching for origin");
+        //FindTarget();
+        //done operation
+        Serial.println("End of operation.");
+        toPlot();
+        State = 4;
+      }
+    }
+      
+      break;
+    case 4:{//end of operation
+      //Serial.println("End of operation");
+      left_motor.run(RELEASE);
+      right_motor.run(RELEASE);
+    }
       break;
     default:
       break;
   }
   
+  */
+
+  toPlot();
   
   //only check for the bottom sensor if it thinks we are within a certain range of the sensor location, otherwise do not
   //drive towards the final location, or at least within a few cm of it, then execute the search algorithm.
