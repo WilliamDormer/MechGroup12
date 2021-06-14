@@ -4,20 +4,24 @@ AF_DCMotor left_motor(1, MOTOR34_1KHZ);  // left motor to M1 on motor control bo
 AF_DCMotor right_motor(3, MOTOR12_1KHZ); // right motor to M3 on motor control board
 
 #define IRTHRESHOLD 25.0
-#define ARCPERTICK 0.55//1.1 //cm
-#define WIDTH 13.0 //wheel to wheel width in cm
+#define ARCPERTICK 0.0055//1.1 //m
+#define WIDTH 0.130 //wheel to wheel width in m
 
 #define DRIVESMOOTHFACTOR 6.0 //this is used to figure out how much the turning should correct based on angle.
 #define BASEMOTORSPEED 170
 #define SLOWDOWNFACTOR 1.2;
+#define WHEELRADIUS 0.032 //in m
 
 //odometry and motor encoding information
 float leftDistance = 0;
 float rightDistance = 0;
+float leftDistanceSaved = 0;
+float rightDistanceSaved = 0;
 
 //timing information for encoders
 unsigned long leftTimer;
 unsigned long rightTimer;
+unsigned long integrationTimer = 0;
 
 struct Position { //odometry position information
     float x; //x offset from origin
@@ -32,6 +36,22 @@ Position aj;
   float ad=0;
   float ae=0;
 
+<<<<<<< Updated upstream
+=======
+  float VL = 0;
+  float VR = 0;
+
+//stuff for obstacle detection and avoidance
+int obstaclesDetected = 0;
+//LinkedList<float[2]> ObstacleOne = LinkedList<float[2]>();
+//LinkedList<float[2]> ObstacleTwo = LinkedList<float[2]>();
+LinkedList<float> ObstacleOneX = LinkedList<float>();
+LinkedList<float> ObstacleOneY = LinkedList<float>();
+LinkedList<float> ObstacleTwoX = LinkedList<float>();
+LinkedList<float> ObstacleTwoY = LinkedList<float>();
+
+
+>>>>>>> Stashed changes
 //Pin Allocations
 #define echoPin A4
 #define trigPin A3
@@ -53,10 +73,10 @@ volatile int setPointBottomPerm;
 volatile int setPointUltrasonic;
 
 //Persistant Sensor information for the ultrasonic
-volatile int UltrasonicReadings[numReadings];
+volatile float UltrasonicReadings[numReadings];
 volatile int UltrasonicReadIndex = 0;
-volatile int UltrasonicTotal = 0;
-volatile int UltrasonicAverage = 0;
+volatile float UltrasonicTotal = 0;
+volatile float UltrasonicAverage = 0;
 
 //Persistant Sensor Information for bottom IR
 int BottomReadings[numReadings];

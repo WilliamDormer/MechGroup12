@@ -11,7 +11,7 @@ void ReadUltrasonic() {
   digitalWrite(trigPin, LOW);
   // Reads the echoPin, returns the sound wave travel time in microseconds
   long duration = pulseIn(echoPin, HIGH);
-  UltrasonicReadings[UltrasonicReadIndex] = duration * 0.034 / 2;;
+  UltrasonicReadings[UltrasonicReadIndex] = duration * 0.034 / 2 / 100; //in m
   // add the reading to the total:
   UltrasonicTotal = UltrasonicTotal + UltrasonicReadings[UltrasonicReadIndex];
   // advance to the next position in the array:
