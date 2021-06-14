@@ -10,7 +10,7 @@ AF_DCMotor right_motor(3, MOTOR12_1KHZ); // right motor to M3 on motor control b
 #define ARCPERTICK 0.55//1.1 //cm
 #define WIDTH 13.0 //wheel to wheel width in cm
 
-#define DRIVESMOOTHFACTOR 300 //this is used to figure out how much the turning should correct based on angle.
+#define DRIVESMOOTHFACTOR 600 //this is used to figure out how much the turning should correct based on angle.
 #define BASEMOTORSPEED 160;
 #define SLOWDOWNFACTOR 1.2;
 
@@ -84,6 +84,7 @@ int BottomAverage = 0;
 #include "SensorCheck.h"
 #include "TravelToDestination.h"
 #include "FinalPositionSearch.h"
+#include "AvoidObstacle.h"
 
 int State = 0; //the state variable holds the mode of operation
 //State = 0; means traveling to destination.
@@ -130,7 +131,7 @@ void setup() {
   }
 
   //init(&leftDistance,&rightDistance,WIDTH);
-  //sensorTest();
+  sensorTest();
 
   init(&leftDistance,&rightDistance,WIDTH);
   left_motor.run(FORWARD);
@@ -148,11 +149,11 @@ void loop() {
   //once it returns to the original location, it then determines which of those data points was the closest to the target, and goes along the saved points to that point,
   //we can store a separate array for each of the obstacles. 
   //then it continues going towards the destination
-
-  FindTarget();
-  delay(100000);
   
-  /*
+  //NavigateObstacle(0);
+  //FindTarget();
+  
+  
   switch (State){
     case 0: { //if it is traveling straight to its destination.
       TravelToDestination(0,targetY); //travel towards the end.
@@ -161,13 +162,13 @@ void loop() {
       ReadLeftIR();
       ReadRightIR();
 
-      if(UltrasonicAverage < 10 || RightAverage == LOW || LeftAverage == LOW){
-        State = 1;
-        break;
-      }
+      //if(UltrasonicAverage < 7.0 || RightAverage == LOW || LeftAverage == LOW){ //7 cm is a good value for getting close but not too close.
+      //  State = 1;
+      //  break;
+      //}
       
       float distanceFromTarget = distanceToTarget(0,targetY);
-      if(distanceFromTarget < 10.0 || aj.y > targetY - 5){
+      if(distanceFromTarget < 10 || aj.y > targetY - 5){//
         State = 2;
         targetY = 0;
         //plot route!
@@ -191,7 +192,7 @@ void loop() {
     default:
       break;
   }
-  */
+  
   
   //only check for the bottom sensor if it thinks we are within a certain range of the sensor location, otherwise do not
   //drive towards the final location, or at least within a few cm of it, then execute the search algorithm.

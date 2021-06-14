@@ -30,6 +30,12 @@ void init(float*leftDist, float*rightDist, float width){
     float deltaY = pow(y-aj.y,2.0);
     return sqrt(deltaX + deltaY);
   }
+
+  float distancePTOP(float x1, float y1,float x2, float y2){
+    float deltaX = pow(x2-x1,2.0);
+    float deltaY = pow(y2-y1,2.0);
+    return sqrt(deltaX + deltaY);
+  }
   
   float headingTo(float x, float y) {
   //i think something is wrong with this

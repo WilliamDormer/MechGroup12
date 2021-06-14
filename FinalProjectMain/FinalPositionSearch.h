@@ -1,3 +1,4 @@
+/*
 void FindTarget(){
 
   //start by doing circles, 
@@ -50,7 +51,7 @@ void FindTarget(){
     for(int i = 4; i < arraySize; i++){
       Serial.print("i: ");
       Serial.print(i);
-      delay(2000);
+      //delay(2000);
       float nextPoint = distanceToTarget(positionArray[i][0], positionArray[i][1]);
       while(nextPoint > 8.0 && flag == false){
         ReadBottomIR();
@@ -62,6 +63,7 @@ void FindTarget(){
             flag = true;
           }
       }
+      delay(1000);
       if(flag == true){
         Serial.println("Target Found");
         break;
@@ -72,4 +74,32 @@ void FindTarget(){
   
   //gradually increase the target radius and the target angle on each iteration to plot a spiral// max radius is 1m
   //then execute until the sensor detects the final location. 
+}
+*/
+void FindTarget(){
+  //new strategy, just spin and slowly increase inner motor speed.
+
+  //first need to rotate the vehicle left a bit or else the sprial grows to the right, but does not actually scan the left hemisphere.
+  right_motor.setSpeed(255);
+  left_motor.setSpeed(0);
+  delay(500);
+  
+  left_motor.setSpeed(255);
+  int i = 100;
+  unsigned long timer = millis();
+  while(i<180){
+    right_motor.setSpeed(i);
+    if(millis()-timer > 400){
+      i++;
+      Serial.println(i);
+      timer = millis();
+    }
+    ReadBottomIR();
+    if(setPointBottomPerm - BottomAverage > IRTHRESHOLD || setPointBottomPerm - BottomAverage < -IRTHRESHOLD){
+      right_motor.run(RELEASE);
+      left_motor.run(RELEASE);
+    }
+  }
+  
+  
 }
