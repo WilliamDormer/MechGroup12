@@ -57,8 +57,8 @@ void TravelToDestination(float testx, float testy){
   Serial.print(LeftMotorValue);
   Serial.print("RightMotorValue ");
   Serial.println(RightMotorValue);
-  left_motor.setSpeed(LeftMotorValue);
-  right_motor.setSpeed(RightMotorValue);
+  //left_motor.setSpeed(LeftMotorValue);
+  //right_motor.setSpeed(RightMotorValue);
 
   //implement slowdown factor
   //get the distance to target.
@@ -73,13 +73,13 @@ void TravelToDestination(float testx, float testy){
   //correction for bad input. 
   if(RightMotorValue > 255){
     RightMotorValue = 255;
-  }else if(RightMotorValue < 30){
-    RightMotorValue = 30;
+  }else if(RightMotorValue < 60){
+    RightMotorValue = 60;
   }
   if(LeftMotorValue > 255){
     LeftMotorValue = 255;
-  }else if(LeftMotorValue < 30){
-    LeftMotorValue = 30;
+  }else if(LeftMotorValue < 60){
+    LeftMotorValue = 60;
   }
   //Serial.print(" Left motor value: ");
   //Serial.print(LeftMotorValue);

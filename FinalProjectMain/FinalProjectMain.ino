@@ -7,7 +7,10 @@ AF_DCMotor left_motor(1, MOTOR34_1KHZ);  // left motor to M1 on motor control bo
 AF_DCMotor right_motor(3, MOTOR12_1KHZ); // right motor to M3 on motor control board
 
 #define IRTHRESHOLD 25.0
-#define ARCPERTICK 0.55//1.1 //cm
+//#define ARCPERTICK 0.55//1.1 //cm //this is what i was using before
+//#define ARCPERTICK 0.5026545 //cm per tick
+#define ARCPERTICK 0.532499955
+
 #define WIDTH 13.0 //wheel to wheel width in cm
 
 #define DRIVESMOOTHFACTOR 250 //this is used to figure out how much the turning should correct based on angle.
@@ -94,8 +97,8 @@ int State = 0; //the state variable holds the mode of operation
 
 void setup() {
   //attach interupts for motor encoders 
-  attachInterrupt(1, countLEncoder, RISING); //calls on any rising level on pin 3 (interrupt #1, soldered to Pin3) 
-  attachInterrupt(0, countREncoder, RISING); //calls on any rising level on pin 2 (interrupt #0, connected to header on Pin2) 
+  attachInterrupt(1, countLEncoder, CHANGE); //calls on any rising level on pin 3 (interrupt #1, soldered to Pin3) 
+  attachInterrupt(0, countREncoder, CHANGE); //calls on any rising level on pin 2 (interrupt #0, connected to header on Pin2) 
   interrupts();
 
 
@@ -149,7 +152,7 @@ void loop() {
   //once it returns to the original location, it then determines which of those data points was the closest to the target, and goes along the saved points to that point,
   //we can store a separate array for each of the obstacles. 
   //then it continues going towards the destination
-  /*
+  
   //NavigateObstacle(0);
   //FindTarget();
   bool Done = false;
@@ -168,16 +171,16 @@ void loop() {
       //}
       
       float distanceFromTarget = distanceToTarget(0,targetY);
-      if(distanceFromTarget < 10 || aj.y > targetY - 5){//
-        right_motor.setSpeed(0);
-        left_motor.setSpeed(0);
+      if(distanceFromTarget < 10 /*|| aj.y > targetY - 5*/){//
+        //right_motor.setSpeed(0);
+        //left_motor.setSpeed(0);
         toPlot();
-        delay(2000);
-        toPlot();
-        delay(2000);
+        //delay(2000);
+        //toPlot();
+        //delay(2000);
         //State = 2;
         State = 3; //for debug
-        targetY = 0;
+        //targetY = 0;
         //plot route!
         //call function to reset the odometry
 
@@ -202,9 +205,9 @@ void loop() {
       break;
     case 3: {//return trip
       //Serial.println("Traveling to origin");
-      TravelToDestination(0,targetY);
+      TravelToDestination(0,0);
       
-      float distanceFromTarget = distanceToTarget(0,targetY); //there is currently an overflow problem with this, it can't deal with the -ve to +ve shift well, so return trip doesn't work.
+      float distanceFromTarget = distanceToTarget(0,0); //there is currently an overflow problem with this, it can't deal with the -ve to +ve shift well, so return trip doesn't work.
       Serial.print("Current heading: ");
       Serial.println(aj.heading);
       if(distanceFromTarget < 10){//
@@ -222,6 +225,7 @@ void loop() {
       break;
     case 4:{//end of operation
       //Serial.println("End of operation");
+      toPlot();
       left_motor.run(RELEASE);
       right_motor.run(RELEASE);
     }
@@ -230,7 +234,7 @@ void loop() {
       break;
   }
   
-  */
+  
 
   toPlot();
   

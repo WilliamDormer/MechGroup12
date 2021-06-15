@@ -8,7 +8,7 @@ void init(float*leftDist, float*rightDist, float width){
     TCCR1B=8|5;//no clue what this does
     *aa=0;
     TCCR1A=4;
-    OCR1A=(int)(100 / 0.064);//timer inverval //0.064 ms/count
+    OCR1A=(int)(50 / 0.064);//timer inverval //0.064 ms/count
     aj.heading=0; //sets the initial heading to zero
     TIMSK1=2;
     interrupts();
@@ -66,14 +66,19 @@ void init(float*leftDist, float*rightDist, float width){
     
     float af=*aa-ad; //i assume this stuff is to handle the storage while it changes.
     float ag=*ab-ae;
+    Serial.print("Change in left ");
+    Serial.print(af);
+    Serial.print("Change in right");
+    
+    
     ad=*aa;
     ae=*ab;
-    float ah=(af+ag)/2.0;//d center
+    float ah=(af+ag)/2.0;//distance traveled by the center of the car.
     float ai=(ag-af)/ac; //dright - dleft / dbaseline is the change in angle
     aj.x-=ah*sin(aj.heading); //change in x is x + dcenter * sin(current angle)
     aj.y+=ah*cos(aj.heading); //change in y is y + dcenter * cos(current angle)
     aj.heading+=ai; //update the angle
-
+    
     //take care of the overflow
     if(abs(aj.heading)>PI){
       if(aj.heading < 0){
