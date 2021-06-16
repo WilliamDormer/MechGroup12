@@ -55,7 +55,7 @@ float PickRoute(){
    //??? Error is down here sommewhere
    if(obstaclesSeen > 1) {
     //append the fist set of points to the route back.
-    PathBack[index][0] = x2 + PATHMARGIN*1.5;
+    PathBack[index][0] = x2 + PATHMARGIN*1.0;
     PathBack[index][1] = y2;
 
     index++; 
@@ -64,7 +64,7 @@ float PickRoute(){
     //Serial.println("Second Obstacle Added to Path");
    }
    if(obstaclesSeen > 0){
-    PathBack[index][0] = x1 + PATHMARGIN*3;
+    PathBack[index][0] = x1 + PATHMARGIN*4;
     PathBack[index][1] = y1;
 
     index++; 
@@ -72,7 +72,7 @@ float PickRoute(){
     //Serial.println("First Obstacle Added to Path");
    }
    
-   PathBack[index][0] = PATHMARGIN*4.5;
+   PathBack[index][0] = PATHMARGIN*6;
    PathBack[index][1] = 0;
 
     //Serial.println("Origin Added to Path");

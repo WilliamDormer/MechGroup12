@@ -18,7 +18,7 @@ AF_DCMotor right_motor(3, MOTOR12_1KHZ); // right motor to M3 on motor control b
 #define SLOWDOWNFACTOR 1.2;
 
 //odometry and motor encoding information
-const float PATHMARGIN  = 25.0;
+const float PATHMARGIN  = 7.0;
 float leftDistance = 0;
 float rightDistance = 0;
 unsigned long foundTime;
@@ -65,7 +65,7 @@ LinkedList<float> ObstacleTwoY = LinkedList<float>();
 #define REncoderPin 2
 
 //Variables for sensors
-const int numReadings = 10; //Determines the number of readings for the ultrasonic and bottom IR sensor smoothing. 
+const int numReadings = 1; //Determines the number of readings for the ultrasonic and bottom IR sensor smoothing. 
 
 bool RightAverage = HIGH;
 bool LeftAverage = HIGH;
@@ -146,7 +146,7 @@ void setup() {
 
   init(&leftDistance,&rightDistance,WIDTH);
   sensorTest();
-  delay(2000);
+  delay(1000);
   leftDistance = 0;
   rightDistance = 0;
   
@@ -155,6 +155,10 @@ void setup() {
   right_motor.run(FORWARD);
 
   State = 0;
+  for(int i = 0; i<numReadings; i++){ //this is required to warm up the sensors for some reason, presumably so the averages get more accurate.
+    CollectSensorData();
+    delay(5);
+  }
 }
 
 void loop() {
@@ -200,9 +204,9 @@ void loop() {
         Serial.println("Saw the final target, going home now");
         foundTime = millis();
         PickRoute();
-      } else if (distanceFromTarget < 50){
+      } else if (distanceFromTarget < 20){
         State = 2;
-      }else if(UltrasonicAverage < 20.0 || RightAverage == LOW || LeftAverage == LOW && obstaclesSeen < 2){ //7 cm is a good value for getting close but not too close.
+      }else if(UltrasonicAverage < 15.0 || RightAverage == LOW || LeftAverage == LOW && obstaclesSeen < 2){ //7 cm is a good value for getting close but not too close.
         if(obstacleTimer == 0 || millis()-obstacleTimer > 500){
           Serial.print("Obstacle Detected");
           obstacleTimer = millis();
@@ -236,32 +240,37 @@ void loop() {
       Serial.println("Return Trip");
       //TravelToDestination(0,0);
       float distanceFromTarget = 10000;
+      bool foundOrigin = false;
       for(int i = 0; i < PathBackLength; i++){
-      do {
-        Serial.print("X: ");
-        Serial.print(PathBack[i][0]);
-        Serial.print("Y: ");
-        Serial.println(PathBack[i][1]);
-        TravelToDestination(PathBack[i][0],PathBack[i][1]);
-        Serial.print("Traveling to destination: X: ");
-        Serial.print(PathBack[i][0]);
-        Serial.print(" ,Y: ");
-        Serial.println(PathBack[i][1]);
-        distanceFromTarget = distanceToTarget(PathBack[i][0],PathBack[i][1]);
-        ReadBottomIR();
-        if(setPointBottomPerm - BottomAverage > IRTHRESHOLD || setPointBottomPerm - BottomAverage < -IRTHRESHOLD && millis()- foundTime > 5000){
-          State = 4; //for debug'
-          Serial.println("home sweet home");
+        if(foundOrigin == true){
           break;
-          
         }
-      }while(distanceFromTarget > 10);
+        do {
+          Serial.print("X: ");
+          Serial.print(PathBack[i][0]);
+          Serial.print("Y: ");
+          Serial.println(PathBack[i][1]);
+          TravelToDestination(PathBack[i][0],PathBack[i][1]);
+          Serial.print("Traveling to destination: X: ");
+          Serial.print(PathBack[i][0]);
+          Serial.print(" ,Y: ");
+          Serial.println(PathBack[i][1]);
+          distanceFromTarget = distanceToTarget(PathBack[i][0],PathBack[i][1]);
+          ReadBottomIR();
+          if(setPointBottomPerm - BottomAverage > IRTHRESHOLD || setPointBottomPerm - BottomAverage < -IRTHRESHOLD && millis()- foundTime > 5000){
+            State = 4; //for debug'
+            foundOrigin = true;
+          }
+        }while(distanceFromTarget > 20 && foundOrigin == false);
         Serial.print("Millis - foundtime: ");
         Serial.println(millis() - foundTime);
         Serial.println("I hit my target on the way back");
+        
       } //end for
-      FindTarget();
-      State = 4;
+      if(foundOrigin == false){
+        FindTarget();
+        State = 4;
+      }
     }
       break;
     case 4:{//end of operation
