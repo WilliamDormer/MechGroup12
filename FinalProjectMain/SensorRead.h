@@ -68,12 +68,12 @@ void CollectSensorData() {
   ReadBottomIR();
   ReadLeftIR();
   ReadRightIR();
-  Serial.print("Ultrasonic: ");
-  Serial.print(UltrasonicAverage);
-  Serial.print(",Bottom Ir: ");
-  Serial.print(BottomAverage);
-  Serial.print(",Left Ir: ");
-  Serial.print(LeftAverage);
-  Serial.print(",Right Ir: ");
-  Serial.println(RightAverage);
+  //Serial.print("Ultrasonic: ");
+  //Serial.print(UltrasonicAverage);
+  //Serial.print(",Bottom Ir: ");
+  //Serial.print(BottomAverage);
+  //Serial.print(",Left Ir: ");
+  //Serial.print(LeftAverage);
+  //Serial.print(",Right Ir: ");
+  //Serial.println(RightAverage);
 }

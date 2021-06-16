@@ -66,9 +66,9 @@ void init(float*leftDist, float*rightDist, float width){
     
     float af=*aa-ad; //i assume this stuff is to handle the storage while it changes.
     float ag=*ab-ae;
-    Serial.print("Change in left ");
-    Serial.print(af);
-    Serial.print("Change in right");
+    //Serial.print("Change in left ");
+    //Serial.print(af);
+    //Serial.print("Change in right");
     
     
     ad=*aa;

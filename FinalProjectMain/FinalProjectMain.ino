@@ -6,7 +6,7 @@
 AF_DCMotor left_motor(1, MOTOR34_1KHZ);  // left motor to M1 on motor control board
 AF_DCMotor right_motor(3, MOTOR12_1KHZ); // right motor to M3 on motor control board
 
-#define IRTHRESHOLD 25.0
+#define IRTHRESHOLD 30.0
 //#define ARCPERTICK 0.55//1.1 //cm //this is what i was using before
 //#define ARCPERTICK 0.5026545 //cm per tick
 #define ARCPERTICK 0.532499955
@@ -18,14 +18,19 @@ AF_DCMotor right_motor(3, MOTOR12_1KHZ); // right motor to M3 on motor control b
 #define SLOWDOWNFACTOR 1.2;
 
 //odometry and motor encoding information
+const float PATHMARGIN  = 25.0;
 float leftDistance = 0;
 float rightDistance = 0;
+unsigned long foundTime;
 
-float targetY = 100; //holds the target destination y value, x will always be zero.
+float targetY = 300; //holds the target destination y value, x will always be zero.
 
 //timing information for encoders
 unsigned long leftTimer;
 unsigned long rightTimer;
+
+float PathBack[3][2];
+int PathBackLength = 0;
 
 struct Position { //odometry position information
     float x; //x offset from origin
@@ -77,10 +82,13 @@ volatile int UltrasonicTotal = 0;
 volatile int UltrasonicAverage = 0;
 
 //Persistant Sensor Information for bottom IR
-int BottomReadings[numReadings];
-int BottomReadIndex = 0;
-int BottomTotal = 0;
-int BottomAverage = 0;
+volatile int BottomReadings[numReadings];
+volatile int BottomReadIndex = 0;
+volatile int BottomTotal = 0;
+volatile int BottomAverage = 0;
+
+int obstaclesSeen = 0;
+unsigned long obstacleTimer = 0;
 
 #include "Odometry.h"
 #include "SensorRead.h"
@@ -90,6 +98,9 @@ int BottomAverage = 0;
 #include "AvoidObstacle.h"
 
 int State = 0; //the state variable holds the mode of operation
+
+
+
 //State = 0; means traveling to destination.
 //State = 1; means avoid obstacle
 //State = 2; means search for target
@@ -121,7 +132,7 @@ void setup() {
   //set reference for the motor encoder timers
   leftTimer = millis();
   rightTimer = millis();
-
+  
   //initialize all the sensor arrays to a value
   for (int thisReading = 0; thisReading < numReadings; thisReading++) {
     BottomReadings[thisReading] = 0; //has to be zero to not mess with future readings, result of which means that some time needs to be taken to calibrate them.
@@ -133,9 +144,12 @@ void setup() {
     delay(5);
   }
 
-  //init(&leftDistance,&rightDistance,WIDTH);
-  //sensorTest();
-
+  init(&leftDistance,&rightDistance,WIDTH);
+  sensorTest();
+  delay(2000);
+  leftDistance = 0;
+  rightDistance = 0;
+  
   init(&leftDistance,&rightDistance,WIDTH);
   left_motor.run(FORWARD);
   right_motor.run(FORWARD);
@@ -155,77 +169,104 @@ void loop() {
   
   //NavigateObstacle(0);
   //FindTarget();
+
+  //ReadBottomIR();
+  //Serial.println(BottomAverage);
+
+  //if(setPointBottomPerm - BottomAverage > IRTHRESHOLD || setPointBottomPerm - BottomAverage < -IRTHRESHOLD){
+  //      Serial.println("LIMIT EXCEEDED");
+  //      Serial.print("SetPointBottomPerm: ");
+  //      Serial.println(setPointBottomPerm);
+  //}
+  
+
+  
   bool Done = false;
   
   switch (State){
-    case 0: { //if it is traveling straight to its destination.
-      TravelToDestination(0,targetY); //travel towards the end.
+    case 0: { 
+      Serial.println("Driving to target");
+      float targetx = 0;
+      //if it is traveling straight to its destination.
+      TravelToDestination(targetx,targetY); //travel towards the end.
       //gather relevant sensor information.
       ReadUltrasonic();
       ReadLeftIR();
       ReadRightIR();
-
-      //if(UltrasonicAverage < 7.0 || RightAverage == LOW || LeftAverage == LOW){ //7 cm is a good value for getting close but not too close.
-      //  State = 1;
-      //  break;
-      //}
-      
-      float distanceFromTarget = distanceToTarget(0,targetY);
-      if(distanceFromTarget < 10 /*|| aj.y > targetY - 5*/){//
-        //right_motor.setSpeed(0);
-        //left_motor.setSpeed(0);
-        toPlot();
-        //delay(2000);
-        //toPlot();
-        //delay(2000);
-        //State = 2;
+      ReadBottomIR();
+      float distanceFromTarget = distanceToTarget(targetx,targetY);
+      if(setPointBottomPerm - BottomAverage > IRTHRESHOLD || setPointBottomPerm - BottomAverage < -IRTHRESHOLD){
         State = 3; //for debug
-        //targetY = 0;
-        //plot route!
-        //call function to reset the odometry
-
-        //force turn to make it less jenky
-        //left_motor.setSpeed(80);
-        //right_motor.setSpeed(190);
-        //delay(500);
+        Serial.println("Saw the final target, going home now");
+        foundTime = millis();
+        PickRoute();
+      } else if (distanceFromTarget < 50){
+        State = 2;
+      }else if(UltrasonicAverage < 20.0 || RightAverage == LOW || LeftAverage == LOW && obstaclesSeen < 2){ //7 cm is a good value for getting close but not too close.
+        if(obstacleTimer == 0 || millis()-obstacleTimer > 500){
+          Serial.print("Obstacle Detected");
+          obstacleTimer = millis();
+          State = 1;
+          //first turn left to ensure that the correct sensor is facing the obstacle. IE go to the left.
+          right_motor.setSpeed(255);
+          left_motor.setSpeed(10);
+          delay(600);
+        }
       }
     }
       break;
     case 1: { //obstacle avoidance
-      //navigate around the obstacle,
-      //store position information in linked list based on timer.
+      Serial.println("Avoiding Obstacle");
+      NavigateObstacle(obstaclesSeen);
+      printLinkedList(obstaclesSeen-1);
+      State = 0; //for debug
+      //State = 2; //for real thing
     }
       break;
     case 2: {//search algorithm
-      //Serial.println("Searching for target");
+      Serial.println("Searching for target");
       FindTarget();
+      foundTime = millis();
+      PickRoute();
       //then initiate return trip
       State = 3;
     }
       break;
     case 3: {//return trip
-      //Serial.println("Traveling to origin");
-      TravelToDestination(0,0);
-      
-      float distanceFromTarget = distanceToTarget(0,0); //there is currently an overflow problem with this, it can't deal with the -ve to +ve shift well, so return trip doesn't work.
-      Serial.print("Current heading: ");
-      Serial.println(aj.heading);
-      if(distanceFromTarget < 10){//
-        //Serial.println(distanceFromTarget);
-        //delay(2000);
-        //Serial.println("Searching for origin");
-        //FindTarget();
-        //done operation
-        Serial.println("End of operation.");
-        toPlot();
-        State = 4;
-      }
+      Serial.println("Return Trip");
+      //TravelToDestination(0,0);
+      float distanceFromTarget = 10000;
+      for(int i = 0; i < PathBackLength; i++){
+      do {
+        Serial.print("X: ");
+        Serial.print(PathBack[i][0]);
+        Serial.print("Y: ");
+        Serial.println(PathBack[i][1]);
+        TravelToDestination(PathBack[i][0],PathBack[i][1]);
+        Serial.print("Traveling to destination: X: ");
+        Serial.print(PathBack[i][0]);
+        Serial.print(" ,Y: ");
+        Serial.println(PathBack[i][1]);
+        distanceFromTarget = distanceToTarget(PathBack[i][0],PathBack[i][1]);
+        ReadBottomIR();
+        if(setPointBottomPerm - BottomAverage > IRTHRESHOLD || setPointBottomPerm - BottomAverage < -IRTHRESHOLD && millis()- foundTime > 5000){
+          State = 4; //for debug'
+          Serial.println("home sweet home");
+          break;
+          
+        }
+      }while(distanceFromTarget > 10);
+        Serial.print("Millis - foundtime: ");
+        Serial.println(millis() - foundTime);
+        Serial.println("I hit my target on the way back");
+      } //end for
+      FindTarget();
+      State = 4;
     }
-      
       break;
     case 4:{//end of operation
       //Serial.println("End of operation");
-      toPlot();
+      //toPlot();
       left_motor.run(RELEASE);
       right_motor.run(RELEASE);
     }
@@ -236,7 +277,7 @@ void loop() {
   
   
 
-  toPlot();
+  //toPlot();
   
   //only check for the bottom sensor if it thinks we are within a certain range of the sensor location, otherwise do not
   //drive towards the final location, or at least within a few cm of it, then execute the search algorithm.

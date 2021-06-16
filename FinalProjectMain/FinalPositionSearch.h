@@ -81,13 +81,13 @@ void FindTarget(){
 
   //first need to rotate the vehicle left a bit or else the sprial grows to the right, but does not actually scan the left hemisphere.
   right_motor.setSpeed(255);
-  left_motor.setSpeed(0);
+  left_motor.setSpeed(10);
   delay(500);
   
   left_motor.setSpeed(255);
   int i = 100;
   unsigned long timer = millis();
-  while(i<180){
+  while(true){
     right_motor.setSpeed(i);
     if(millis()-timer > 400){
       i++;

@@ -9,15 +9,76 @@ void RecordPosition(int obstacle){ //works
 }
 
 float PickRoute(){
-  //should return an array holding the coordinates that it should go.
+   //determine the path that connects the leftmost part of both obstacles.
+   //ideally we want to hit the front and back left side of both obstacles. 
+   float * arrx1 = ObstacleOneX.ToArray();
+   float * arry1 = ObstacleOneY.ToArray();
+   float * arrx2 = ObstacleTwoX.ToArray();
+    float * arry2 = ObstacleTwoY.ToArray();
 
-  //if both obstacles are hit it is easy, we know it needs to go around each of them to the center.
-  //if only one is there then we have a problem.
-  //2 possible situations:
-  //either it hit the first and missed the second:
-  //or it hit the second and missed the first. 
+   float x1 = 10000;
+   float x2 = 10000;
+    float y1; //want largest value
+    float y2; //want smallest value
 
-  //one solution is to play the center, meaning that it only travels forwards along the center line, thus if it misses an obstacle, it is fine if it knows to return to the center path after clearing the other. 
+    int index = 0;
+   
+   //sort through first arrays to find the smallest x value
+   Serial.println(" ");
+   Serial.println(" ");
+   if(obstaclesSeen > 0){
+    
+    for(int i = 0; i < ObstacleOneX.GetSize(); i++){
+      if(arrx1[i]<x1){
+        x1 = arrx1[i];
+        y1 = arry1[i];
+      }
+    }
+
+    if(obstaclesSeen > 1){
+
+    
+      
+    for(int i = 0; i < ObstacleTwoX.GetSize(); i++){
+      if(arrx2[i]<x2){
+        x2 = arrx2[i];
+        y2 = arry2[i];
+      }
+    } 
+    
+   }
+   
+    
+   }
+
+
+   //??? Error is down here sommewhere
+   if(obstaclesSeen > 1) {
+    //append the fist set of points to the route back.
+    PathBack[index][0] = x2 + PATHMARGIN*1.5;
+    PathBack[index][1] = y2;
+
+    index++; 
+    PathBackLength++;
+
+    //Serial.println("Second Obstacle Added to Path");
+   }
+   if(obstaclesSeen > 0){
+    PathBack[index][0] = x1 + PATHMARGIN*3;
+    PathBack[index][1] = y1;
+
+    index++; 
+    PathBackLength++;
+    //Serial.println("First Obstacle Added to Path");
+   }
+   
+   PathBack[index][0] = PATHMARGIN*4.5;
+   PathBack[index][1] = 0;
+
+    //Serial.println("Origin Added to Path");
+   
+   PathBackLength++;
+   
 }
 
 void printLinkedList(int obstacle){ //works
@@ -40,70 +101,59 @@ void printLinkedList(int obstacle){ //works
       Serial.print("X: ");
       Serial.print(arrx2[i]);
       Serial.print("Y: ");
-      Serial.print(arry2[i]);
+      Serial.println(arry2[i]);
     }
   }
 }
-
+//MAKE THIS NON BLOCKING
 void NavigateObstacle(int obstacle){
-  //keep the right side of the vehicle facing the obstacle.
-  //get close enough that the right IR sensor can detect the obstacle.
-  //ReadUltrasonic();
-  //ReadLeftIR();
+  
   ReadRightIR(); //theoretically we should only need the right ir for this.
   bool pastIRvalue = RightAverage;
   //loop that goes forwards a bit, then turns in the direction indicated by sensor.
   RecordPosition(obstacle);
-  float xStart;
-  float yStart;
-  if(obstacle == 0){ //use the first linked list pair
-    xStart = ObstacleOneX.GetHead();
-    yStart = ObstacleOneY.GetHead();
-  }else if (obstacle == 1){ //use the second linked list pair
-    xStart = ObstacleTwoX.GetHead();
-    yStart = ObstacleTwoY.GetHead();
-  }
   unsigned long recordTimer = millis();
   unsigned long startTime = recordTimer;
+  unsigned long StraightTime = millis();
+  bool flag = false;
   do{
     ReadRightIR();
     //record position on time interval.
-    if(millis()-recordTimer > 500){
-      Serial.print("Recording position");
+    if(millis()-recordTimer > 250){
+      //Serial.println("Recording position");
       RecordPosition(obstacle);
       recordTimer = millis();
     }
     
-    if(RightAverage==LOW){ //on
-      Serial.println("Turn Left");
-      left_motor.setSpeed(0);
-      right_motor.setSpeed(255);
-    }else{ //off
-      //on low to high, we want to check to make sure that we didn't pass the edge of the obstacle.
-      if(pastIRvalue == LOW){
-        Serial.println("Go Straight.");
-        left_motor.setSpeed(170);
-        right_motor.setSpeed(170);
-        delay(200);
-      }
-      Serial.println("Turn Right");
-      left_motor.setSpeed(180);
-      right_motor.setSpeed(0);
-    }
-    pastIRvalue = RightAverage;
-  }while(recordTimer - startTime < 2000 || distanceToTarget(xStart,yStart) > 10);
+      if(RightAverage==LOW){ //on
+        flag = false;
+        Serial.println("Turn Left");
+        left_motor.setSpeed(60);
+        right_motor.setSpeed(255);
+        //flag = false;
+      }else{ //off
+        if(pastIRvalue == LOW){
+          flag = true;
+          StraightTime = millis();
+        }
 
-  //debug
-  //Serial.println("While Ended");
-  left_motor.run(RELEASE);
-  right_motor.run(RELEASE);
-  delay(10000);
-  //printLinkedList(0);
+        if(flag == true){
+          if(millis() - StraightTime > 300){
+            flag = false;
+            Serial.println("Broke Free");
+          }
+          left_motor.setSpeed(170);
+          right_motor.setSpeed(170);
+          Serial.println("Going Straight");
+        } else if(flag == false){
+          Serial.println("Turning Right");
+          left_motor.setSpeed(255);
+          right_motor.setSpeed(60);
+        }
+      }    
+    pastIRvalue = RightAverage;
+  }while(aj.heading > -1.10 );
+  obstaclesSeen++;
+  obstacleTimer = millis();
   
-  //drive on that borderline, which should turn right when it is present, left when not.
-  //store locations periodically,
-  //when we reach a location that is within 5 cm of one of the other locations, then stop recording
-  //at this point, determine which of the points was the closest to the goal.
-  //then go to that point, by following the recorded points.
-  //resume motion.
 }
