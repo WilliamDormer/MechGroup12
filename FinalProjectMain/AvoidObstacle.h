@@ -52,7 +52,7 @@ float PickRoute(){
    }
 
 
-   //??? Error is down here sommewhere
+  
    if(obstaclesSeen > 1) {
     //append the fist set of points to the route back.
     PathBack[index][0] = x2 + PATHMARGIN*1.0;
@@ -155,5 +155,45 @@ void NavigateObstacle(int obstacle){
   }while(aj.heading > -1.10 );
   obstaclesSeen++;
   obstacleTimer = millis();
+  
+}
+
+void NavigateObstacleReturn(){
+  
+  ReadRightIR(); //theoretically we should only need the right ir for this.
+  bool pastIRvalue = RightAverage;
+  //loop that goes forwards a bit, then turns in the direction indicated by sensor.
+  unsigned long StraightTime = millis();
+  bool flag = false;
+  do{
+    ReadRightIR();
+      if(RightAverage==LOW){ //on
+        flag = false;
+        Serial.println("Turn Left");
+        left_motor.setSpeed(60);
+        right_motor.setSpeed(255);
+        //flag = false;
+      }else{ //off
+        if(pastIRvalue == LOW){
+          flag = true;
+          StraightTime = millis();
+        }
+
+        if(flag == true){
+          if(millis() - StraightTime > 300){
+            flag = false;
+            Serial.println("Broke Free");
+          }
+          left_motor.setSpeed(170);
+          right_motor.setSpeed(170);
+          Serial.println("Going Straight");
+        } else if(flag == false){
+          Serial.println("Turning Right");
+          left_motor.setSpeed(255);
+          right_motor.setSpeed(60);
+        }
+      }    
+    pastIRvalue = RightAverage;
+  }while(aj.heading < 0 || aj.heading > 5*PI/6); //chances are this wont work.
   
 }

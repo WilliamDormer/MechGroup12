@@ -257,9 +257,15 @@ void loop() {
           Serial.println(PathBack[i][1]);
           distanceFromTarget = distanceToTarget(PathBack[i][0],PathBack[i][1]);
           ReadBottomIR();
+          ReadUltrasonic();
           if(setPointBottomPerm - BottomAverage > IRTHRESHOLD || setPointBottomPerm - BottomAverage < -IRTHRESHOLD && millis()- foundTime > 5000){
             State = 4; //for debug'
             foundOrigin = true;
+          }else if(UltrasonicAverage < 15.0 || RightAverage == LOW || LeftAverage == LOW){ //7 cm is a good value for getting close but not too close.
+            right_motor.setSpeed(255);
+            left_motor.setSpeed(10);
+            delay(600);
+            NavigateObstacleReturn();
           }
         }while(distanceFromTarget > 20 && foundOrigin == false);
         Serial.print("Millis - foundtime: ");
